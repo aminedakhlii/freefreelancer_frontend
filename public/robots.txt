@@ -1,0 +1,23 @@
+User-agent: *
+Allow: /
+Disallow: /freelancer/dashboard
+Disallow: /freelancer/proposals
+Disallow: /freelancer/messages
+Disallow: /freelancer/profile/edit
+Disallow: /freelancer/interview/
+Disallow: /freelancer/profile/import
+Disallow: /client/dashboard
+Disallow: /client/projects/new
+Disallow: /client/messages
+Disallow: /client/profile/edit
+Disallow: /settings
+Disallow: /api/
+Disallow: /login
+Disallow: /signup
+Disallow: /forgot-password
+Disallow: /complete-signup
+
+Allow: /freelancer/projects
+Allow: /freelancer/
+
+Sitemap: https://freefreelancer.com/sitemap.xml

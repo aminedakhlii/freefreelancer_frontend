@@ -1,0 +1,34 @@
+<header class="header">
+  @if (profile(); as p) {
+    <a [routerLink]="p.role === 'freelancer' ? '/freelancer/dashboard' : '/client/dashboard'" class="logo">freefreelancer</a>
+  } @else {
+    <a routerLink="/" class="logo">freefreelancer</a>
+  }
+  <nav class="nav">
+    @if (!profile(); as p) {
+      <a routerLink="/how-it-works">How it works</a>
+      <a routerLink="/login">Log in</a>
+      <a routerLink="/signup" class="btn btn-primary">Sign up</a>
+    } @else {
+      @if (profile()?.role === 'freelancer') {
+        <a routerLink="/freelancer/dashboard" routerLinkActive="active">Dashboard</a>
+        <a routerLink="/freelancer/projects" routerLinkActive="active">Projects</a>
+        <a routerLink="/freelancer/proposals" routerLinkActive="active">Proposals</a>
+        <a routerLink="/freelancer/messages" routerLinkActive="active">Chat</a>
+        <a routerLink="/freelancer/profile" routerLinkActive="active">Profile</a>
+        <a routerLink="/freelancer/profile/import" routerLinkActive="active">Import</a>
+      }
+      @if (profile()?.role === 'client') {
+        <a routerLink="/client/dashboard" routerLinkActive="active">Dashboard</a>
+        <a routerLink="/client/projects" routerLinkActive="active">My Projects</a>
+        <a routerLink="/client/freelancers" routerLinkActive="active">Freelancers</a>
+        <a routerLink="/client/messages" routerLinkActive="active">Chat</a>
+      }
+      <a routerLink="/settings" routerLinkActive="active">Settings</a>
+      <button type="button" class="btn btn-ghost" (click)="signOut()">Sign out</button>
+    }
+  </nav>
+</header>
+<main class="main">
+  <router-outlet />
+</main>

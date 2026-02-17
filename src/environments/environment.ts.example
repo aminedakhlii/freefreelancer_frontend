@@ -1,0 +1,10 @@
+export const environment = {
+  production: false,
+  supabaseUrl: 'YOUR_SUPABASE_URL',
+  supabaseAnonKey: 'YOUR_SUPABASE_ANON_KEY',
+  apiUrl: 'http://localhost:5001/api',
+  siteUrl: 'http://localhost:4200',
+  gaMeasurementId: '',
+  googleSiteVerification: '',
+  bingSiteVerification: '',
+};

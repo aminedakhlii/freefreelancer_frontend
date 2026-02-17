@@ -1,0 +1,18 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+  background: var(--bg-header, #0f172a);
+  color: var(--text-inverse, #f8fafc);
+  a {
+    color: inherit;
+    text-decoration: none;
+    margin-right: 1.5rem;
+    &.active { font-weight: 600; }
+  }
+  .logo { font-weight: 700; font-size: 1.25rem; }
+  .nav { display: flex; align-items: center; }
+}
+.main { min-height: calc(100vh - 60px); padding: 1.5rem 2rem; }
+.header .btn { margin-left: 0.25rem; }
