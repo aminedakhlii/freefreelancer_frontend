@@ -17,16 +17,16 @@ import { SeoService } from '../../../core/services/seo.service';
           <form (ngSubmit)="sendCode()">
             <div class="form-group">
               <label for="login-phone">Phone number</label>
-              <input id="login-phone" type="tel" [(ngModel)]="phone" name="phone" placeholder="+1 234 567 8900" required />
-              <span class="field-hint">Same number you used to sign up (with country code)</span>
+              <input id="login-phone" type="tel" [(ngModel)]="phone" name="phone" placeholder="5551234567" maxlength="10" inputmode="numeric" pattern="[0-9]*" (input)="onPhoneInput($event)" required />
+              <span class="field-hint">US only — 10 digits, no country code</span>
             </div>
             @if (error) { <p class="error-msg">{{ error }}</p> }
             <div class="form-actions">
-              <button type="submit" class="btn btn-primary" [disabled]="loading">Send code</button>
+              <button type="submit" class="btn btn-primary" [disabled]="loading || phone.length < 10">Send code</button>
             </div>
           </form>
         } @else {
-          <p class="code-sent-msg">We sent a 6-digit code to <strong>{{ phone }}</strong>.</p>
+          <p class="code-sent-msg">We sent a 6-digit code to <strong>{{ formatPhoneDisplay(phone) }}</strong>.</p>
           <form (ngSubmit)="verify()">
             <div class="form-group">
               <label for="login-otp">Verification code</label>
@@ -64,6 +64,19 @@ export class LoginComponent implements OnInit {
       description: 'Log in to your freefreelancer account.',
       noIndex: true,
     });
+  }
+
+  onPhoneInput(e: Event) {
+    const input = e.target as HTMLInputElement;
+    const digits = (input.value || '').replace(/\D/g, '').slice(0, 10);
+    this.phone = digits;
+    input.value = digits;
+  }
+
+  formatPhoneDisplay(phone: string): string {
+    const d = (phone || '').replace(/\D/g, '').slice(-10);
+    if (d.length === 10) return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
+    return phone || '';
   }
 
   async sendCode() {

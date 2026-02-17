@@ -34,15 +34,24 @@ export class SupabaseService {
     return this.client.auth.signInWithPassword({ email, password });
   }
 
-  /** Phone OTP: send 6-digit code via SMS. Phone must be E.164 (e.g. +12025551234). */
+  /** Normalize US phone to E.164: 10 digits -> +1XXXXXXXXXX. */
+  static toUsE164(phone: string): string {
+    const digits = phone.replace(/\D/g, '');
+    if (digits.length === 10) return '+1' + digits;
+    if (digits.length === 11 && digits.startsWith('1')) return '+' + digits;
+    if (phone.startsWith('+')) return phone;
+    return '+1' + digits.slice(-10);
+  }
+
+  /** Phone OTP: send 6-digit code via SMS. Pass US 10-digit number (no +1). */
   signInWithOtpPhone(phone: string) {
-    const normalized = phone.startsWith('+') ? phone : '+' + phone.replace(/\D/g, '');
+    const normalized = SupabaseService.toUsE164(phone);
     return this.client.auth.signInWithOtp({ phone: normalized });
   }
 
   /** Phone OTP: verify the 6-digit code and complete sign-in. */
   verifyOtpPhone(phone: string, token: string) {
-    const normalized = phone.startsWith('+') ? phone : '+' + phone.replace(/\D/g, '');
+    const normalized = SupabaseService.toUsE164(phone);
     return this.client.auth.verifyOtp({ phone: normalized, token, type: 'sms' });
   }
 
