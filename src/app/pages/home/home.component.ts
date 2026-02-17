@@ -9,8 +9,8 @@ import { environment } from '../../../environments/environment';
   imports: [RouterLink],
   template: `
     <div class="hero">
-      <h1>US-Focused Freelancing, Quality-First</h1>
-      <p class="lead">Minimum $1,000 projects. AI-validated skills. No platform fees (MVP).</p>
+      <h1>The Freelance Marketplace Where Quality Wins</h1>
+      <p class="lead">US-only. $1,000+ projects. Every freelancer AI-interviewed before you ever see their proposal</p>
       <div class="cta">
         <button type="button" class="btn btn-primary" (click)="router.navigate(['/signup'])">Get started</button>
         <a routerLink="/how-it-works" class="btn btn-outline">How it works</a>
@@ -19,9 +19,13 @@ import { environment } from '../../../environments/environment';
     <section class="features container">
       <h2>Why freefreelancer</h2>
       <div class="grid">
-        <div class="card"><h3>Quality bar</h3><p>AI skill interviews for every bid so clients see verified competence.</p></div>
-        <div class="card"><h3>Serious budgets</h3><p>Projects start at $1,000 so freelancers work on meaningful work.</p></div>
-        <div class="card"><h3>Your data</h3><p>Import portfolio from Upwork, Fiverr, Freelancer.com, GitHub.</p></div>
+        <div class="card"><h3>🎯 Only Vetted Proposals</h3><p>Before submitting a bid, every freelancer completes an AI skill 
+interview tailored to your project. You only see candidates who 
+actually know what they're doing.</p></div>
+        <div class="card"><h3>💼 Serious Projects Only</h3><p>Every project starts at $1,000. No race to the bottom, no $5 gigs. 
+Just meaningful work with clients who are ready to invest.</p></div>
+        <div class="card"><h3>📂 Your Portfolio, Instantly Ready</h3><p>Already on Upwork, Fiverr, or GitHub? Import your entire portfolio 
+in one click. Start winning projects without starting from scratch.</p></div>
       </div>
     </section>
   `,
