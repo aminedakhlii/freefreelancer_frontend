@@ -2,6 +2,17 @@
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 18.2.21.
 
+## Environment setup
+
+Environment files are not committed. After cloning, create them from the examples:
+
+```bash
+cp src/environments/environment.ts.example src/environments/environment.ts
+cp src/environments/environment.prod.ts.example src/environments/environment.prod.ts
+```
+
+Then edit `environment.ts` and `environment.prod.ts` and set your Supabase URL, anon key, and (for prod) `siteUrl`.
+
 ## Development server
 
 Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
