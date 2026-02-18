@@ -34,7 +34,8 @@ const content = `export const environment = {
 };
 `;
 
-const outPath = path.join(__dirname, '..', 'src', 'environments', 'environment.prod.ts');
-fs.mkdirSync(path.dirname(outPath), { recursive: true });
-fs.writeFileSync(outPath, content, 'utf8');
-console.log('Generated', outPath);
+const dir = path.join(__dirname, '..', 'src', 'environments');
+fs.mkdirSync(dir, { recursive: true });
+fs.writeFileSync(path.join(dir, 'environment.prod.ts'), content, 'utf8');
+fs.writeFileSync(path.join(dir, 'environment.ts'), content, 'utf8');
+console.log('Generated environment.ts and environment.prod.ts');
