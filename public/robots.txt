@@ -20,4 +20,4 @@ Disallow: /complete-signup
 Allow: /freelancer/projects
 Allow: /freelancer/
 
-Sitemap: https://freefreelancer.com/sitemap.xml
+Sitemap: https://freefreelancer.us/sitemap.xml
