@@ -11,7 +11,7 @@ cp src/environments/environment.ts.example src/environments/environment.ts
 cp src/environments/environment.prod.ts.example src/environments/environment.prod.ts
 ```
 
-Then edit `environment.ts` and `environment.prod.ts` and set your Supabase URL, anon key, and (for prod) `siteUrl`.
+Then edit both files and set your **Firebase** config (Project Settings → General → Your apps: apiKey, authDomain, projectId, storageBucket, messagingSenderId, appId), plus `apiUrl` and (for prod) `siteUrl`. Auth uses Firebase Phone Sign-In only.
 
 ## Development server
 

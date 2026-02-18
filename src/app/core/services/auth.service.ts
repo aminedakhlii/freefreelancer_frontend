@@ -1,8 +1,9 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { SupabaseService } from './supabase.service';
+import { FirebaseAuthService } from './firebase-auth.service';
 import { ApiService } from './api.service';
+import { AuthTokenService } from './auth-token.service';
 
 export interface Profile {
   id: string;
@@ -17,44 +18,48 @@ export interface Profile {
   [key: string]: unknown;
 }
 
+const RECAPTCHA_CONTAINER_ID = 'firebase-recaptcha-container';
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private supabase = inject(SupabaseService);
+  private firebase = inject(FirebaseAuthService);
   private api = inject(ApiService);
   private router = inject(Router);
+  private authToken = inject(AuthTokenService);
+
+  constructor() {
+    this.authToken.setProvider(() => this.getAccessToken());
+  }
 
   private profileSignal = signal<Profile | null>(null);
   profile = this.profileSignal.asReadonly();
   isLoggedIn = computed(() => !!this.profileSignal());
 
-  /** Resolves when the initial Supabase session has been applied (profile set or confirmed null). */
+  /** reCAPTCHA container id for phone auth (add a div with this id in signup/login template). */
+  readonly recaptchaContainerId = RECAPTCHA_CONTAINER_ID;
+
   private initialSessionDone: Promise<void> | null = null;
 
-  /** Wait for initial session to be restored (for use in guards if they run before APP_INITIALIZER). */
   waitForInitialSession(): Promise<void> {
     return this.init();
   }
 
-  /**
-   * Call once at app startup. Sets up auth state listener and returns a promise that resolves
-   * when the initial session has been restored (so guards can wait and then read profile).
-   */
   init(): Promise<void> {
     if (this.initialSessionDone !== null) return this.initialSessionDone;
+    let resolved = false;
     this.initialSessionDone = new Promise<void>((resolve) => {
-      const timeout = setTimeout(() => resolve(), 5000);
-      this.supabase.onAuthStateChange(async (event, session: unknown) => {
-        const s = session as { user?: unknown; access_token?: string } | null;
-        if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          if (s?.user) await this.loadProfile(s?.access_token ?? undefined);
+      const timeout = setTimeout(() => {
+        if (!resolved) { resolved = true; resolve(); }
+      }, 5000);
+      this.firebase.onAuthStateChanged(async (user) => {
+        if (user) {
+          const token = await user.getIdToken().catch(() => null);
+          if (token) await this.loadProfile(token);
           else this.profileSignal.set(null);
-          if (event === 'INITIAL_SESSION') {
-            clearTimeout(timeout);
-            resolve();
-          }
-        } else if (event === 'SIGNED_OUT') {
+        } else {
           this.profileSignal.set(null);
         }
+        if (!resolved) { resolved = true; clearTimeout(timeout); resolve(); }
       });
     });
     return this.initialSessionDone;
@@ -63,11 +68,10 @@ export class AuthService {
   private static readonly SIGNUP_PENDING_ROLE_KEY = 'signup_pending_role';
   private static readonly TOKEN_TIMEOUT_MS = 5000;
 
-  /** Get access token with timeout so we never hang forever on getSession(). */
-  private async getAccessTokenWithTimeout(): Promise<string | null> {
+  async getAccessToken(): Promise<string | null> {
     try {
       return await Promise.race([
-        this.supabase.getAccessToken(),
+        this.firebase.getAccessToken(),
         new Promise<null>((_, reject) =>
           setTimeout(() => reject(new Error('token_timeout')), AuthService.TOKEN_TIMEOUT_MS)
         ),
@@ -77,16 +81,11 @@ export class AuthService {
     }
   }
 
-  /**
-   * Load profile from backend. Pass accessToken when you already have it (e.g. right after login)
-   * so the request is sent immediately. We never use the Observable-based api.get() here so we
-   * avoid hanging on getAccessToken(); we resolve the token first (with timeout) then use getWithToken.
-   */
   async loadProfile(accessToken?: string | null): Promise<Profile | null> {
     const token =
       accessToken !== undefined && accessToken !== null && accessToken !== ''
         ? accessToken
-        : await this.getAccessTokenWithTimeout();
+        : await this.getAccessToken();
     if (!token) {
       this.profileSignal.set(null);
       return null;
@@ -114,55 +113,24 @@ export class AuthService {
     return null;
   }
 
-  async signUp(email: string, password: string, role: 'freelancer' | 'client'): Promise<{ needsEmailConfirmation: boolean }> {
-    const { data, error } = await this.supabase.signUp(email, password);
-    if (error) throw error;
-    if (data.session?.user && data.session.access_token) {
-      await firstValueFrom(this.api.postWithToken('/auth/profile', { role }, data.session.access_token));
-      await this.loadProfile(data.session.access_token);
-      return { needsEmailConfirmation: false };
-    }
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem(AuthService.SIGNUP_PENDING_ROLE_KEY, role);
-    }
-    return { needsEmailConfirmation: true };
+  /** Request SMS OTP (Firebase phone auth). Pass recaptcha container id from template. */
+  async requestPhoneOtp(phone: string, recaptchaContainerId: string = RECAPTCHA_CONTAINER_ID): Promise<void> {
+    await this.firebase.requestPhoneOtp(phone, recaptchaContainerId);
   }
 
-  async signIn(email: string, password: string) {
-    const { data, error } = await this.supabase.signIn(email, password);
-    if (error) throw error;
-    const token = data?.session?.access_token;
-    if (!token) {
-      throw new Error('No session returned. Please confirm your email or try again.');
-    }
-    await this.loadProfile(token);
-    return data;
-  }
-
-  /** Request SMS OTP for phone sign-in/sign-up. Call verifyPhoneOtp after user enters code. */
-  async requestPhoneOtp(phone: string): Promise<void> {
-    const { error } = await this.supabase.signInWithOtpPhone(phone);
-    if (error) throw error;
-  }
-
-  /**
-   * Verify phone OTP and complete auth. If signup pending role is in localStorage, creates profile with that role.
-   */
-  async verifyPhoneOtp(phone: string, token: string): Promise<void> {
-    const { data, error } = await this.supabase.verifyOtpPhone(phone, token);
-    if (error) throw error;
-    const accessToken = data?.session?.access_token;
-    if (!accessToken) throw new Error('Verification succeeded but no session.');
+  /** Verify phone OTP and complete auth. If signup pending role in localStorage, creates profile. */
+  async verifyPhoneOtp(code: string): Promise<void> {
+    const idToken = await this.firebase.verifyPhoneOtp(code);
     const pendingRole = typeof localStorage !== 'undefined' && localStorage.getItem(AuthService.SIGNUP_PENDING_ROLE_KEY);
     if (pendingRole === 'freelancer' || pendingRole === 'client') {
-      await firstValueFrom(this.api.postWithToken('/auth/profile', { role: pendingRole }, accessToken));
+      await firstValueFrom(this.api.postWithToken('/auth/profile', { role: pendingRole }, idToken));
       if (typeof localStorage !== 'undefined') localStorage.removeItem(AuthService.SIGNUP_PENDING_ROLE_KEY);
     }
-    await this.loadProfile(accessToken);
+    await this.loadProfile(idToken);
   }
 
-  signOut() {
-    return this.supabase.signOut().then(() => {
+  signOut(): Promise<void> {
+    return this.firebase.signOut().then(() => {
       this.profileSignal.set(null);
       this.router.navigate(['/login']);
     });

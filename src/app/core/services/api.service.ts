@@ -2,15 +2,15 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, from, switchMap } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { SupabaseService } from './supabase.service';
+import { AuthTokenService } from './auth-token.service';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   private http = inject(HttpClient);
-  private supabase = inject(SupabaseService);
+  private authToken = inject(AuthTokenService);
 
   private getHeaders(): Observable<Record<string, string>> {
-    return from(this.supabase.getAccessToken()).pipe(
+    return from(this.authToken.getAccessToken()).pipe(
       switchMap((token) => {
         const headers: Record<string, string> = { 'Content-Type': 'application/json' };
         if (token) headers['Authorization'] = `Bearer ${token}`;
@@ -19,7 +19,6 @@ export class ApiService {
     );
   }
 
-  /** Call API with an explicit token (e.g. right after login so we don't wait on getSession). */
   getWithToken<T>(path: string, token: string, params?: Record<string, string | number | boolean>): Observable<T> {
     const headers: Record<string, string> = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
     let httpParams = new HttpParams();

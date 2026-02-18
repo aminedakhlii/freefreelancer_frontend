@@ -20,6 +20,7 @@ import { SeoService } from '../../../core/services/seo.service';
               <input id="login-phone" type="tel" [(ngModel)]="phone" name="phone" placeholder="5551234567" maxlength="10" inputmode="numeric" pattern="[0-9]*" (input)="onPhoneInput($event)" required />
               <span class="field-hint">US only — 10 digits, no country code</span>
             </div>
+            <div [id]="recaptchaContainerId" aria-hidden="true"></div>
             @if (error) { <p class="error-msg">{{ error }}</p> }
             <div class="form-actions">
               <button type="submit" class="btn btn-primary" [disabled]="loading || phone.length < 10">Send code</button>
@@ -73,6 +74,10 @@ export class LoginComponent implements OnInit {
     input.value = digits;
   }
 
+  get recaptchaContainerId(): string {
+    return this.auth.recaptchaContainerId;
+  }
+
   formatPhoneDisplay(phone: string): string {
     const d = (phone || '').replace(/\D/g, '').slice(-10);
     if (d.length === 10) return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
@@ -83,7 +88,7 @@ export class LoginComponent implements OnInit {
     this.error = '';
     this.loading = true;
     try {
-      await this.auth.requestPhoneOtp(this.phone);
+      await this.auth.requestPhoneOtp(this.phone, this.auth.recaptchaContainerId);
       this.step = 2;
       this.otp = '';
     } catch (e: unknown) {
@@ -100,7 +105,7 @@ export class LoginComponent implements OnInit {
       setTimeout(() => reject(new Error('Verification timed out. Request a new code.')), this.timeoutMs)
     );
     try {
-      await Promise.race([this.auth.verifyPhoneOtp(this.phone, this.otp), timeoutPromise]);
+      await Promise.race([this.auth.verifyPhoneOtp(this.otp), timeoutPromise]);
       const p = this.auth.profile();
       if (!p) this.router.navigate(['/complete-signup']);
       else this.auth.redirectByRole();

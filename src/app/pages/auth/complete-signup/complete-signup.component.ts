@@ -4,7 +4,6 @@ import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
 import { ApiService } from '../../../core/services/api.service';
-import { SupabaseService } from '../../../core/services/supabase.service';
 
 @Component({
   selector: 'app-complete-signup',
@@ -35,15 +34,14 @@ import { SupabaseService } from '../../../core/services/supabase.service';
 export class CompleteSignupComponent implements OnInit {
   private api = inject(ApiService);
   private auth = inject(AuthService);
-  private supabase = inject(SupabaseService);
   private router = inject(Router);
   role: 'freelancer' | 'client' = 'freelancer';
   loading = false;
   error = '';
 
   async ngOnInit() {
-    const { data: { session } } = await this.supabase.session;
-    if (!session) {
+    const token = await this.auth.getAccessToken();
+    if (!token) {
       this.router.navigate(['/login']);
       return;
     }
@@ -58,16 +56,17 @@ export class CompleteSignupComponent implements OnInit {
     this.error = '';
     this.loading = true;
     try {
-      const { data: { session } } = await this.supabase.session;
-      if (!session?.access_token) {
+      const token = await this.auth.getAccessToken();
+      if (!token) {
         this.error = 'Session expired. Please log in again.';
         return;
       }
-      await firstValueFrom(this.api.postWithToken('/auth/profile', { role: this.role }, session.access_token));
-      await this.auth.loadProfile(session.access_token);
+      await firstValueFrom(this.api.postWithToken('/auth/profile', { role: this.role }, token));
+      await this.auth.loadProfile(token);
       this.auth.redirectByRole();
-    } catch (e: any) {
-      this.error = e?.error?.error || e?.message || 'Failed';
+    } catch (e: unknown) {
+      const err = e as { error?: { error?: string }; message?: string };
+      this.error = err?.error?.error || err?.message || 'Failed';
     } finally {
       this.loading = false;
     }

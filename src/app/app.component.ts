@@ -4,11 +4,12 @@ import { DOCUMENT } from '@angular/common';
 import { isPlatformBrowser } from '@angular/common';
 import { AuthService } from './core/services/auth.service';
 import { environment } from '../environments/environment';
+import { ChatPanelComponent } from './pages/shared/chat-panel/chat-panel.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, ChatPanelComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
 })

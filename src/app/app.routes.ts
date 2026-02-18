@@ -9,6 +9,7 @@ export const routes: Routes = [
   { path: 'signup', loadComponent: () => import('./pages/auth/signup/signup.component').then(m => m.SignupComponent) },
   { path: 'forgot-password', loadComponent: () => import('./pages/auth/forgot-password/forgot-password.component').then(m => m.ForgotPasswordComponent) },
   { path: 'complete-signup', loadComponent: () => import('./pages/auth/complete-signup/complete-signup.component').then(m => m.CompleteSignupComponent) },
+  { path: 'complete-profile', loadComponent: () => import('./pages/auth/complete-profile/complete-profile.component').then(m => m.CompleteProfileComponent), canActivate: [authGuard] },
   { path: 'terms', loadComponent: () => import('./pages/legal/terms/terms.component').then(m => m.TermsComponent) },
   { path: 'privacy', loadComponent: () => import('./pages/legal/privacy/privacy.component').then(m => m.PrivacyComponent) },
   {

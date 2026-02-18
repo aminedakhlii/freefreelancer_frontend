@@ -1,10 +1,16 @@
 export const environment = {
   production: false,
-  supabaseUrl: 'YOUR_SUPABASE_URL',
-  supabaseAnonKey: 'YOUR_SUPABASE_ANON_KEY',
   apiUrl: 'http://localhost:5001/api',
   siteUrl: 'http://localhost:4200',
   gaMeasurementId: '',
   googleSiteVerification: '',
   bingSiteVerification: '',
+  firebase: {
+    apiKey: 'YOUR_FIREBASE_API_KEY',
+    authDomain: 'YOUR_PROJECT.firebaseapp.com',
+    projectId: 'YOUR_PROJECT_ID',
+    storageBucket: 'YOUR_PROJECT.appspot.com',
+    messagingSenderId: 'YOUR_SENDER_ID',
+    appId: 'YOUR_APP_ID',
+  },
 };

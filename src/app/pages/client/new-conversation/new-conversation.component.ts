@@ -1,12 +1,13 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../../core/services/api.service';
+import { ChatPanelService } from '../../../core/services/chat-panel.service';
 
 @Component({
   selector: 'app-new-conversation',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, RouterLink],
   template: `
     <div class="container" style="padding-top: 1rem;">
       <div class="form-card">
@@ -39,6 +40,7 @@ export class NewConversationComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private api = inject(ApiService);
+  private chatPanel = inject(ChatPanelService);
   freelancerId = '';
   projects: any[] = [];
   projectId = '';
@@ -59,7 +61,8 @@ export class NewConversationComponent implements OnInit {
     this.api.post<{ id: string }>('/messages/thread', { project_id: this.projectId, freelancer_id: this.freelancerId }).subscribe({
       next: (thread) => {
         this.loading = false;
-        this.router.navigate(['/client/messages/thread', thread.id]);
+        this.chatPanel.openWithThread(thread.id);
+        this.router.navigate(['/client/dashboard']);
       },
       error: (e) => {
         this.loading = false;

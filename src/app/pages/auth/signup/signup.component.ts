@@ -34,6 +34,7 @@ const SIGNUP_PENDING_PHONE_KEY = 'signup_pending_phone';
               <input id="signup-phone" type="tel" [(ngModel)]="phone" name="phone" placeholder="5551234567" maxlength="10" inputmode="numeric" pattern="[0-9]*" (input)="onPhoneInput($event)" required />
               <span class="field-hint">US only — 10 digits, no country code</span>
             </div>
+            <div [id]="recaptchaContainerId" aria-hidden="true"></div>
             @if (error) { <p class="error-msg">{{ error }}</p> }
             <div class="form-actions">
               <button type="submit" class="btn btn-primary" [disabled]="loading || phone.length < 10">Send verification code</button>
@@ -97,6 +98,10 @@ export class SignupComponent implements OnInit {
     input.value = digits;
   }
 
+  get recaptchaContainerId(): string {
+    return this.auth.recaptchaContainerId;
+  }
+
   formatPhoneDisplay(phone: string): string {
     const d = (phone || '').replace(/\D/g, '').slice(-10);
     if (d.length === 10) return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
@@ -111,7 +116,7 @@ export class SignupComponent implements OnInit {
         localStorage.setItem(SIGNUP_PENDING_ROLE_KEY, this.role);
         localStorage.setItem(SIGNUP_PENDING_PHONE_KEY, this.phone);
       }
-      await this.auth.requestPhoneOtp(this.phone);
+      await this.auth.requestPhoneOtp(this.phone, this.auth.recaptchaContainerId);
       this.step = 2;
       this.otp = '';
     } catch (e: unknown) {
@@ -124,10 +129,9 @@ export class SignupComponent implements OnInit {
   async verify() {
     this.error = '';
     this.loading = true;
-    const phoneToUse = typeof localStorage !== 'undefined' ? localStorage.getItem(SIGNUP_PENDING_PHONE_KEY) || this.phone : this.phone;
     try {
-      await this.auth.verifyPhoneOtp(phoneToUse || this.phone, this.otp);
-      this.auth.redirectByRole();
+      await this.auth.verifyPhoneOtp(this.otp);
+      this.router.navigate(['/complete-profile']);
     } catch (e: unknown) {
       this.error = e && typeof e === 'object' && 'message' in e ? String((e as { message: string }).message) : 'Invalid or expired code. Try again.';
     } finally {
