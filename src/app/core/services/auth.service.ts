@@ -95,6 +95,7 @@ export class AuthService {
       const res = await firstValueFrom(this.api.getWithToken<Profile>('/auth/me', token));
       if (res) {
         this.profileSignal.set(res);
+        if (typeof localStorage !== 'undefined') localStorage.removeItem(AuthService.SIGNUP_PENDING_ROLE_KEY);
         return res;
       }
     } catch {
@@ -124,7 +125,7 @@ export class AuthService {
     const pendingRole = typeof localStorage !== 'undefined' && localStorage.getItem(AuthService.SIGNUP_PENDING_ROLE_KEY);
     if (pendingRole === 'freelancer' || pendingRole === 'client') {
       await firstValueFrom(this.api.postWithToken('/auth/profile', { role: pendingRole }, idToken));
-      if (typeof localStorage !== 'undefined') localStorage.removeItem(AuthService.SIGNUP_PENDING_ROLE_KEY);
+      // Clear pending role only after profile is loaded so we don't lose it if loadProfile fails
     }
     await this.loadProfile(idToken);
   }

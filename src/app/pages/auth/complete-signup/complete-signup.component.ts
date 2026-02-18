@@ -50,6 +50,12 @@ export class CompleteSignupComponent implements OnInit {
       this.auth.redirectByRole();
       return;
     }
+    // If they chose role at signup, create profile with it and redirect (no form)
+    const pendingRole = typeof localStorage !== 'undefined' && localStorage.getItem('signup_pending_role');
+    if (pendingRole === 'freelancer' || pendingRole === 'client') {
+      this.role = pendingRole;
+      await this.submit();
+    }
   }
 
   async submit() {
